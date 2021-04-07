@@ -5,6 +5,8 @@ extern crate log;
 extern crate clap;
 
 mod settings;
+mod services;
+mod models;
 
 use crate::settings::Settings;
 use std::env;
