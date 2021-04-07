@@ -12,7 +12,7 @@ make run
 ```
 
 ## TODO
-- [ ] Settings 
+- [x] Settings 
 - [ ] Web Server with warp
 - [ ] Eventstoredb 
 - [ ] Kafka
