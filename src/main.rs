@@ -21,5 +21,5 @@ async fn main() {
     env_logger::init();
     let settings = Settings::init();
     
-    
+    services::run(settings).await;
 }

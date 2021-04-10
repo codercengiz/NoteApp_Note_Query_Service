@@ -30,14 +30,14 @@ args:
         default_value: localhost:9092
         about: Sets address of kafka brokers
         takes_value: true
-    - kafka-producer-topics:
+    - kafka-consumer-topics:
         short: t
-        long: kafka-producer-topics
-        env: KAFKA_PRODUCER_TOPICS
-        value_name: KAFKA_PRODUCER_TOPICS
+        long: kafka-consumer-topics
+        env: KAFKA_CONSUMER_TOPICS
+        value_name: KAFKA_CONSUMER_TOPICS
         required: true
         default_value: note.command.service
-        about: Sets producer topics of kafka
+        about: Sets consumer topics of kafka
         takes_value: true
     - mongodb-host:
         short: h
@@ -67,7 +67,7 @@ args:
         default_value: demo
         takes_value: true
     - mongodb-collection:
-        short: p
+        short: c
         long: mongodb-collection
         env: MONGODB_COLLECTION
         value_name: MONGODB_COLLECTION

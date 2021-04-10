@@ -39,8 +39,8 @@ impl Settings {
                 .expect("Invalid Brokers")
                 .to_string(),
 
-            producer_topics: matches
-                .values_of("kafka-producer-topics")
+            consumer_topics: matches
+                .values_of("kafka-consumer-topics")
                 .expect("Invalid Topics")
                 .map(|x| x.to_string())
                 .collect(),
@@ -82,7 +82,7 @@ pub(crate) struct WebServerSettings {
 #[derive(Debug)]
 pub(crate) struct KafkaSettings {
     pub(crate) broker: String,
-    pub(crate) producer_topics: Vec<String>,
+    pub(crate) consumer_topics: Vec<String>,
 }
 
 #[derive(Debug)]
