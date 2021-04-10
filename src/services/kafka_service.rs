@@ -71,8 +71,16 @@ impl KafkaService {
                     .add_note(note_created_event_model)
                     .await
             }
-            EventModel::ParentOfNoteChangedEventModel(_) => {}
-            EventModel::BasicInfoOfNoteChangedEventModel(_) => {}
+            EventModel::ParentOfNoteChangedEventModel(parent_of_note_changed_event_model) => {
+                self.mongodb_service
+                    .change_parent_of_note(parent_of_note_changed_event_model)
+                    .await
+            }
+            EventModel::BasicInfoOfNoteChangedEventModel(basic_info_of_note_changed_event_model) => {
+                self.mongodb_service
+                    .change_basic_info_of_note(basic_info_of_note_changed_event_model)
+                    .await
+            }
         }
     }
 }
