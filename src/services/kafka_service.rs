@@ -12,10 +12,10 @@ use super::mongodb_service::MongodbService;
 pub(crate) struct KafkaService {
     brokers: String,
     topics: String,
-    mongodb_service:MongodbService,
+    mongodb_service: MongodbService,
 }
 impl KafkaService {
-    pub fn init(settings: KafkaSettings,mongodb_service:MongodbService) -> Self {
+    pub fn init(settings: KafkaSettings, mongodb_service: MongodbService) -> Self {
         KafkaService {
             brokers: settings.broker,
             topics: settings.consumer_topics[0].to_string(),
@@ -26,10 +26,11 @@ impl KafkaService {
     pub(crate) async fn start_polling(&self) {
         let mut consumer = Consumer::from_hosts(vec![self.brokers.to_owned()])
             .with_topic(self.topics.to_owned())
-            .with_group("noteapp".to_string())
+            .with_group("noteapp_note_query_service".to_string())
             .with_fallback_offset(FetchOffset::Earliest)
             .with_offset_storage(GroupOffsetStorage::Kafka)
-            .create().unwrap();
+            .create()
+            .unwrap();
 
         log::debug!("Starting kafka consumer");
 
@@ -59,15 +60,17 @@ impl KafkaService {
                     }
                 }
             }
-            consumer.commit_consumed();
+            let _ = consumer.commit_consumed();
         }
     }
 
     pub(crate) async fn apply_event(&self, event: EventModel) {
-
-
         match event {
-            EventModel::NoteCreatedEventModel(note_created_event_model) => {}
+            EventModel::NoteCreatedEventModel(note_created_event_model) => {
+                self.mongodb_service
+                    .add_note(note_created_event_model)
+                    .await
+            }
             EventModel::ParentOfNoteChangedEventModel(_) => {}
             EventModel::BasicInfoOfNoteChangedEventModel(_) => {}
         }

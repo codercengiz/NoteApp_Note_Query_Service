@@ -66,7 +66,7 @@ impl Settings {
             username: username.clone(),
             password: password.clone(),
             database: matches
-                .value_of("mongodb-collection")
+                .value_of("mongodb-database")
                 .expect("Invalid Mongodb Password")
                 .to_string(),
             connectionstring: format!("mongodb://{}:{}@{}", username, password, host),
