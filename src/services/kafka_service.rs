@@ -22,7 +22,7 @@ impl KafkaService {
     pub(crate) async fn start_polling(&self) {
         let mut consumer = Consumer::from_hosts(vec![self.brokers.to_owned()])
             .with_topic(self.topics.to_owned())
-            .with_group("deneme".to_string())
+            .with_group("noteapp".to_string())
             .with_fallback_offset(FetchOffset::Earliest)
             .with_offset_storage(GroupOffsetStorage::Kafka)
             .create().unwrap();
