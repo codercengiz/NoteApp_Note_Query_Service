@@ -7,15 +7,19 @@ use kafka::error::Error as KafkaError;
 use crate::models::EventModel;
 use crate::settings::KafkaSettings;
 
+use super::mongodb_service::MongodbService;
+
 pub(crate) struct KafkaService {
     brokers: String,
     topics: String,
+    mongodb_service:MongodbService,
 }
 impl KafkaService {
-    pub fn init(settings: KafkaSettings) -> Self {
+    pub fn init(settings: KafkaSettings,mongodb_service:MongodbService) -> Self {
         KafkaService {
             brokers: settings.broker,
             topics: settings.consumer_topics[0].to_string(),
+            mongodb_service,
         }
     }
 
@@ -63,7 +67,7 @@ impl KafkaService {
 
 
         match event {
-            EventModel::NoteCreatedEventModel(_) => {}
+            EventModel::NoteCreatedEventModel(note_created_event_model) => {}
             EventModel::ParentOfNoteChangedEventModel(_) => {}
             EventModel::BasicInfoOfNoteChangedEventModel(_) => {}
         }

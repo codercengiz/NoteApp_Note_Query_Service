@@ -65,7 +65,7 @@ impl Settings {
             host: host.clone(),
             username: username.clone(),
             password: password.clone(),
-            collection: matches
+            database: matches
                 .value_of("mongodb-collection")
                 .expect("Invalid Mongodb Password")
                 .to_string(),
@@ -90,6 +90,6 @@ pub(crate) struct MongodbSettings {
     pub(crate) host: String,
     pub(crate) username: String,
     pub(crate) password: String,
-    pub(crate) collection: String,
+    pub(crate) database: String,
     pub(crate) connectionstring: String,
 }

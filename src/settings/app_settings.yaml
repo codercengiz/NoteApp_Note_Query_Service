@@ -66,12 +66,12 @@ args:
         about: Sets password of mongodb
         default_value: demo
         takes_value: true
-    - mongodb-collection:
+    - mongodb-database:
         short: c
-        long: mongodb-collection
-        env: MONGODB_COLLECTION
-        value_name: MONGODB_COLLECTION
+        long: mongodb-database
+        env: MONGODB_DATABASE
+        value_name: MONGODB_DATABASE
         required: true
-        about: Sets collection of mongodb
+        about: Sets database of mongodb
         default_value: Notes
         takes_value: true
