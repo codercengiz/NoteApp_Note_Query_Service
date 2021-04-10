@@ -10,6 +10,6 @@ pub(crate) async fn run(settings:Settings) {
 
     let kafka_service = KafkaService::init(settings.kafka_settings);
 
-    kafka_service.consume_messages().await;
+    kafka_service.start_polling().await;
     
 }

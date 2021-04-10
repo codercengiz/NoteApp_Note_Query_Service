@@ -4,50 +4,68 @@ extern crate kafka;
 use kafka::consumer::{Consumer, FetchOffset, GroupOffsetStorage};
 use kafka::error::Error as KafkaError;
 
+use crate::models::EventModel;
 use crate::settings::KafkaSettings;
 
 pub(crate) struct KafkaService {
-    pub broker: String,
-    pub topic: String,
+    brokers: String,
+    topics: String,
 }
 impl KafkaService {
     pub fn init(settings: KafkaSettings) -> Self {
         KafkaService {
-            broker: settings.broker,
-            topic: settings.consumer_topics[0].to_string(),
+            brokers: settings.broker,
+            topics: settings.consumer_topics[0].to_string(),
         }
     }
 
-    pub(crate) async fn consume_messages(
-       &self
-    ) -> Result<(), KafkaError> {
-        let mut con = Consumer::from_hosts(vec![self.broker.to_owned()])
-            
-            .with_topic(self.topic.to_owned())
+    pub(crate) async fn start_polling(&self) {
+        let mut consumer = Consumer::from_hosts(vec![self.brokers.to_owned()])
+            .with_topic(self.topics.to_owned())
+            .with_group("deneme".to_string())
             .with_fallback_offset(FetchOffset::Earliest)
             .with_offset_storage(GroupOffsetStorage::Kafka)
-            .create()?;
+            .create().unwrap();
+
+        log::debug!("Starting kafka consumer");
 
         loop {
-            let mss = con.poll()?;
-            if mss.is_empty() {
-                println!("No messages available right now.");
+            let ms = consumer.poll().unwrap();
+            if ms.is_empty() {
+                continue;
             }
 
-            for ms in mss.iter() {
-                for m in ms.messages() {
-                    println!(
-                        "{}:{}@{}: {:?}",
-                        ms.topic(),
-                        ms.partition(),
-                        m.offset,
-                        m.value,
-                        
-                    );
+            for messages in ms.iter() {
+                for message in messages.messages() {
+                    match serde_json::from_slice::<EventModel>(message.value) {
+                        Ok(event) => {
+                            println!("{:?}", &event);
+                            self.apply_event(event).await;
+                        }
+                        Err(error @ serde_json::Error { .. }) if error.is_eof() => {}
+                        Err(_) => {}
+                    }
+
+                    if let Err(_) = consumer.consume_message(
+                        messages.topic(),
+                        messages.partition(),
+                        message.offset,
+                    ) {
+                        log::error!("Could not mark message as consumed");
+                    }
                 }
-                let _ = con.consume_messageset(ms);
             }
-            con.commit_consumed()?;
+            consumer.commit_consumed();
+        }
+    }
+
+    pub(crate) async fn apply_event(&self, event: EventModel) {
+
+
+        match event {
+            EventModel::NoteCreatedEventModel(_) => {}
+            EventModel::ParentOfNoteChangedEventModel(_) => {}
+            EventModel::BasicInfoOfNoteChangedEventModel(_) => {}
         }
     }
 }
