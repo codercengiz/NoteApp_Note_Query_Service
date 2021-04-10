@@ -16,6 +16,9 @@ make run
 - [x] Web Server with warp
 - [x] Mongodb Service 
 - [x] Kafka Consumer
+- [ ] Get All Notes for a User
+- [ ] Get One Note
+- [ ] Get Childs of a Note
 - [x] Note Create event catch and apply to mongodb
 - [x] Note Parent Change event catch and apply to mongodb
 - [x] Note Basic Info Change event catch and apply to mongodb
