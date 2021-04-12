@@ -120,12 +120,12 @@ impl TryFrom<Document> for NoteModel {
         let user_id = document.get_str("user_id").map(String::from)?;
         let text = document.get_str("text").map(String::from)?;
         let title = document.get_str("title").map(String::from)?;
-        let timestamp = document.get_timestamp("create_date")?;
+        //let timestamp = document.get_timestamp("create_date")?;
 
-        let create_date = DateTime::<Utc>::from_utc(
+        /*let create_date = DateTime::<Utc>::from_utc(
             NaiveDateTime::from_timestamp(timestamp.time.into(), timestamp.increment),
             Utc,
-        );
+        );*/
         let image = document.get_str("image").map(String::from)?;
         let file = document.get_str("file").map(String::from)?;
 
@@ -133,7 +133,7 @@ impl TryFrom<Document> for NoteModel {
             _id: note_id,
             pid,
             user_id,
-            create_date,
+            
             text,
             title,
             image,

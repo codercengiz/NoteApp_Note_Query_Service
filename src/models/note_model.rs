@@ -11,8 +11,7 @@ pub struct NoteModel {
 pub _id: String,
 pub pid:String,
 pub user_id:String,
-#[serde(with = "ts_milliseconds")]
-pub create_date:DateTime<Utc>,
+
 pub text:String,
 pub title:String,
 pub image:String,          
