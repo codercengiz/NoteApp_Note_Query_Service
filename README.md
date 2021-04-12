@@ -30,6 +30,7 @@ make run
 - [ ] Healthcheck
 - [ ] Api version mechanism
 - [ ] Docker file
+- [ ] Error handling
 
 ## HTTP-API
 ### Get Notes for a User

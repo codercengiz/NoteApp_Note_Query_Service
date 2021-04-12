@@ -22,6 +22,7 @@ impl KafkaService {
             mongodb_service,
         }
     }
+    
 
     pub(crate) async fn start_polling(&self) {
         let mut consumer = Consumer::from_hosts(vec![self.brokers.to_owned()])
@@ -76,7 +77,9 @@ impl KafkaService {
                     .change_parent_of_note(parent_of_note_changed_event_model)
                     .await
             }
-            EventModel::BasicInfoOfNoteChangedEventModel(basic_info_of_note_changed_event_model) => {
+            EventModel::BasicInfoOfNoteChangedEventModel(
+                basic_info_of_note_changed_event_model,
+            ) => {
                 self.mongodb_service
                     .change_basic_info_of_note(basic_info_of_note_changed_event_model)
                     .await
