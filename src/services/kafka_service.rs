@@ -1,67 +1,87 @@
 extern crate env_logger;
 extern crate kafka;
+use futures::stream::StreamExt;
 
-use kafka::consumer::{Consumer, FetchOffset, GroupOffsetStorage};
-use kafka::error::Error as KafkaError;
+use rdkafka::{consumer::{CommitMode, Consumer, StreamConsumer}, message::FromBytes};
+use rdkafka::message::Message;
+use rdkafka::producer::{FutureProducer, FutureRecord};
+use rdkafka::util::AsyncRuntime;
+use rdkafka::{
+    config::{ClientConfig, RDKafkaLogLevel},
+    consumer::{ConsumerContext, Rebalance},
+    error::KafkaResult,
+    ClientContext, TopicPartitionList,
+};
+use std::{future::Future, str::Utf8Error};
 
 use crate::models::EventModel;
 use crate::settings::KafkaSettings;
 
 use super::mongodb_service::MongodbService;
 
+struct CustomContext;
+type LoggingConsumer = StreamConsumer<CustomContext>;
+impl ClientContext for CustomContext {}
+
+impl ConsumerContext for CustomContext {
+    fn pre_rebalance(&self, rebalance: &Rebalance) {
+        info!("Pre rebalance {:?}", rebalance);
+    }
+
+    fn post_rebalance(&self, rebalance: &Rebalance) {
+        info!("Post rebalance {:?}", rebalance);
+    }
+
+    fn commit_callback(&self, result: KafkaResult<()>, _offsets: &TopicPartitionList) {
+        info!("Committing offsets: {:?}", result);
+    }
+}
 pub(crate) struct KafkaService {
     brokers: String,
-    topics: String,
+    topics: Vec<String>,
     mongodb_service: MongodbService,
 }
 impl KafkaService {
     pub fn init(settings: KafkaSettings, mongodb_service: MongodbService) -> Self {
         KafkaService {
             brokers: settings.broker,
-            topics: settings.consumer_topics[0].to_string(),
+            topics: settings.consumer_topics,
             mongodb_service,
         }
     }
-    
+
+    // A type alias with your custom consumer can be created for convenience.
 
     pub(crate) async fn start_polling(&self) {
-        let mut consumer = Consumer::from_hosts(vec![self.brokers.to_owned()])
-            .with_topic(self.topics.to_owned())
-            .with_group("noteapp_note_query_service".to_string())
-            .with_fallback_offset(FetchOffset::Earliest)
-            .with_offset_storage(GroupOffsetStorage::Kafka)
-            .create()
-            .unwrap();
+        let context = CustomContext;
 
-        log::debug!("Starting kafka consumer");
+        let consumer: LoggingConsumer = ClientConfig::new()
+            .set("group.id", "noteapp_note_query_service")
+            .set("bootstrap.servers", &self.brokers)
+            .set("enable.partition.eof", "false")
+            .set("session.timeout.ms", "6000")
+            .set("enable.auto.commit", "true")
+            //.set("statistics.interval.ms", "30000")
+            //.set("auto.offset.reset", "smallest")
+            .set_log_level(RDKafkaLogLevel::Debug)
+            .create_with_context(context)
+            .expect("Consumer creation failed");
+        let topics: Vec<&str> = self.topics.iter().map(|t| t as &str).collect();
+        consumer
+            .subscribe(&topics)
+            .expect("Can't subscribe to specified topics");
 
         loop {
-            let ms = consumer.poll().unwrap();
-            if ms.is_empty() {
-                continue;
-            }
-
-            for messages in ms.iter() {
-                for message in messages.messages() {
-                    match serde_json::from_slice::<EventModel>(message.value) {
-                        Ok(event) => {
-                            println!("{:?}", &event);
-                            self.apply_event(event).await;
-                        }
-                        Err(error @ serde_json::Error { .. }) if error.is_eof() => {}
-                        Err(_) => {}
-                    }
-
-                    if let Err(_) = consumer.consume_message(
-                        messages.topic(),
-                        messages.partition(),
-                        message.offset,
-                    ) {
-                        log::error!("Could not mark message as consumed");
-                    }
+            match consumer.recv().await {
+                Err(e) => warn!("Kafka error: {}", e),
+                Ok(m) => {
+                    
+                   let payload =  m.payload().unwrap();
+                   let event_model = serde_json::from_slice::<EventModel>(payload).unwrap();
+                   self.apply_event(event_model).await;
+                   consumer.commit_message(&m, CommitMode::Async).unwrap();
                 }
-            }
-            let _ = consumer.commit_consumed();
+            };
         }
     }
 
@@ -87,3 +107,20 @@ impl KafkaService {
         }
     }
 }
+
+/* 
+impl FromBytes for EventModel {
+    type Error = Error;
+
+    fn from_bytes(message: &[u8]) -> Result<&Self, Self::Error> {
+        match  std::str::from_utf8(message) {
+            Ok(payload) => { match serde_json::from_slice::<EventModel>(payload) {
+                Ok(event_model) => { Ok(event_model)}
+                Err(err) => {Err(erro)}
+            } 
+        
+        }
+            Err(err) => {}
+        }
+    }
+}*/

@@ -42,7 +42,7 @@ impl Settings {
             consumer_topics: matches
                 .values_of("kafka-consumer-topics")
                 .expect("Invalid Topics")
-                .map(|x| x.to_string())
+                .map(|x| x.to_owned())
                 .collect(),
         }
     }
